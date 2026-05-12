@@ -27,13 +27,13 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Install dependencies
-        run: npm install # Ou pnpm install, já que vi um pnpm-lock aí
+        run: npm install
       - name: Build with Next.js
         run: npx next build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out # O Next.js exporta para a pasta 'out'
+          path: ./out # Agora sem o prefixo da pasta!
 
   deploy:
     environment:
