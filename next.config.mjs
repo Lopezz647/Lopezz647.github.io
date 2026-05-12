@@ -1,20 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // <-- OBRIGATÓRIO para gerar a pasta 'out'
+  output: 'export', 
+  distDir: 'out', // Forçamos o nome da pasta de saída
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
-    ignoreDuringBuilds: true, // Evita que erros de lint parem o deploy
+    ignoreDuringBuilds: true,
   },
   images: {
     unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "crests.football-data.org",
-      },
-    ],
   },
 }
 
