@@ -20,20 +20,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: 'npm' # Adiciona cache para o build ser mais rápido
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
+
       - name: Install dependencies
         run: npm install
+
       - name: Build with Next.js
+        # O comando 'next build' com 'output: export' DEVE criar a pasta 'out'
         run: npx next build
+
+      - name: List files (Debug)
+        # Esse comando vai nos mostrar no log se a pasta 'out' foi realmente criada
+        run: ls -R
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out # Agora sem o prefixo da pasta!
+          # Se o Next.js por algum motivo não criou 'out', ele pode ter criado 'dist' ou '.next/server'
+          # Mas com 'output: export', o padrão é 'out'
+          path: ./out
 
   deploy:
     environment:
