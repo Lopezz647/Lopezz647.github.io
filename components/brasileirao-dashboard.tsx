@@ -6,11 +6,7 @@ import { MatchCard } from "./match-card"
 import { FilterButtons } from "./filter-buttons"
 import { LoadingSkeleton } from "./loading-skeleton"
 
-// ============================================
-// COLE SUA CHAVE DA API AQUI
-// Obtenha sua chave em: https://www.football-data.org/
-// ============================================
-const API_KEY = ""
+const API_KEY = "5a2cb173fc7745c7a4a57fe923c55700"
 
 const API_URL = "https://api.football-data.org/v4/competitions/BSA/matches"
 
