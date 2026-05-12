@@ -7,14 +7,43 @@ import { FilterButtons } from "./filter-buttons"
 import { LoadingSkeleton } from "./loading-skeleton"
 
 // ============================================
-// COLE A URL DA SUA API AQUI
+// COLE SUA CHAVE DA API AQUI
+// Obtenha sua chave em: https://www.football-data.org/
 // ============================================
-const API_URL = ""
+const API_KEY = "5a2cb173fc7745c7a4a57fe923c55700"
+
+const API_URL = "https://api.football-data.org/v4/competitions/BSA/matches"
+
+interface ApiMatch {
+  id: number
+  homeTeam: {
+    shortName: string
+    crest: string
+  }
+  awayTeam: {
+    shortName: string
+    crest: string
+  }
+  score: {
+    fullTime: {
+      home: number | null
+      away: number | null
+    }
+  }
+  status: string
+  utcDate: string
+}
+
+interface ApiResponse {
+  matches: ApiMatch[]
+}
 
 interface Match {
   id: number
   home: string
   away: string
+  homeCrest: string
+  awayCrest: string
   homeScore: number | null
   awayScore: number | null
   status: string
@@ -29,6 +58,8 @@ const MOCK_DATA: Match[] = [
     id: 1,
     home: "Flamengo",
     away: "Palmeiras",
+    homeCrest: "",
+    awayCrest: "",
     homeScore: 2,
     awayScore: 1,
     status: "IN_PLAY",
@@ -38,6 +69,8 @@ const MOCK_DATA: Match[] = [
     id: 2,
     home: "Corinthians",
     away: "São Paulo",
+    homeCrest: "",
+    awayCrest: "",
     homeScore: 1,
     awayScore: 1,
     status: "FINISHED",
@@ -47,6 +80,8 @@ const MOCK_DATA: Match[] = [
     id: 3,
     home: "Grêmio",
     away: "Internacional",
+    homeCrest: "",
+    awayCrest: "",
     homeScore: null,
     awayScore: null,
     status: "SCHEDULED",
@@ -56,6 +91,8 @@ const MOCK_DATA: Match[] = [
     id: 4,
     home: "Atlético-MG",
     away: "Cruzeiro",
+    homeCrest: "",
+    awayCrest: "",
     homeScore: 3,
     awayScore: 0,
     status: "FINISHED",
@@ -65,15 +102,19 @@ const MOCK_DATA: Match[] = [
     id: 5,
     home: "Botafogo",
     away: "Fluminense",
+    homeCrest: "",
+    awayCrest: "",
     homeScore: 0,
     awayScore: 0,
-    status: "LIVE",
+    status: "IN_PLAY",
     date: "2026-05-12T21:30:00Z",
   },
   {
     id: 6,
     home: "Santos",
     away: "Bahia",
+    homeCrest: "",
+    awayCrest: "",
     homeScore: null,
     awayScore: null,
     status: "SCHEDULED",
@@ -82,7 +123,7 @@ const MOCK_DATA: Match[] = [
 ]
 
 function isLiveStatus(status: string): boolean {
-  return status === "IN_PLAY" || status === "LIVE" || status === "PAUSED"
+  return status === "IN_PLAY" || status === "PAUSED"
 }
 
 function isFinishedStatus(status: string): boolean {
@@ -101,7 +142,7 @@ export function BrasileiraoDashboard() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
   const fetchMatches = async () => {
-    if (!API_URL) {
+    if (!API_KEY) {
       // Usa dados de exemplo se não há API configurada
       setMatches(MOCK_DATA)
       setLastUpdate(new Date())
@@ -112,14 +153,38 @@ export function BrasileiraoDashboard() {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch(API_URL)
+      const response = await fetch(API_URL, {
+        headers: {
+          "X-Auth-Token": API_KEY,
+        },
+      })
 
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error("Chave de API inválida ou sem permissão")
+        }
+        if (response.status === 429) {
+          throw new Error("Limite de requisições atingido. Aguarde um momento.")
+        }
         throw new Error("Falha ao carregar os dados")
       }
 
-      const data = await response.json()
-      setMatches(data)
+      const data: ApiResponse = await response.json()
+      
+      // Mapeia os dados da API para o formato interno
+      const mappedMatches: Match[] = data.matches.map((match) => ({
+        id: match.id,
+        home: match.homeTeam.shortName,
+        away: match.awayTeam.shortName,
+        homeCrest: match.homeTeam.crest,
+        awayCrest: match.awayTeam.crest,
+        homeScore: match.score.fullTime.home,
+        awayScore: match.score.fullTime.away,
+        status: match.status,
+        date: match.utcDate,
+      }))
+
+      setMatches(mappedMatches)
       setLastUpdate(new Date())
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro desconhecido")
@@ -132,7 +197,7 @@ export function BrasileiraoDashboard() {
     fetchMatches()
 
     // Atualiza a cada 60 segundos se há API configurada
-    if (API_URL) {
+    if (API_KEY) {
       const interval = setInterval(fetchMatches, 60000)
       return () => clearInterval(interval)
     }
@@ -210,14 +275,23 @@ export function BrasileiraoDashboard() {
         </div>
 
         {/* Aviso de dados de exemplo */}
-        {!API_URL && (
+        {!API_KEY && (
           <div className="mb-4 p-4 bg-primary/10 border border-primary/20 rounded-xl">
             <p className="text-sm text-primary">
               <strong>Modo de demonstração:</strong> Configure a variável{" "}
               <code className="px-1.5 py-0.5 bg-primary/20 rounded text-xs">
-                API_URL
+                API_KEY
               </code>{" "}
-              no código para carregar dados reais.
+              no código com sua chave da{" "}
+              <a
+                href="https://www.football-data.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:no-underline"
+              >
+                football-data.org
+              </a>{" "}
+              para carregar dados reais.
             </p>
           </div>
         )}
@@ -274,7 +348,7 @@ export function BrasileiraoDashboard() {
       <footer className="border-t border-border mt-8">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <p className="text-center text-xs text-muted-foreground">
-            Dados atualizados automaticamente a cada minuto
+            Dados fornecidos por football-data.org
           </p>
         </div>
       </footer>
