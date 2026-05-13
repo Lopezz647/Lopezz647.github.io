@@ -1,5 +1,7 @@
 name: Deploy Next.js site to Pages
-
+concurrency:
+  group: "pages"
+  cancel-in-progress: true # Cancela o build anterior se um novo começa
 on:
   push:
     branches: ["main"]
